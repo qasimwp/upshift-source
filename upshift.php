@@ -3,7 +3,7 @@
  * Plugin Name:       Upshift - PHP Upgrade Check & Guard
  * Description:       Checks your plugins and themes for code that breaks on a newer PHP version. Optional: see which of that code really runs on your site, and get warned when a plugin starts failing after a PHP change.
  * Version:           1.0.0
- * Requires at least: 5.8
+ * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Muhammad Qasim
  * Author URI:        https://profiles.wordpress.org/qasimwp/
