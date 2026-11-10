@@ -807,6 +807,17 @@ class Check {
 			/* translators: %s: number of plugins and themes. */
 			$lines[] = sprintf( _n( '... and %s more plugin or theme in the CSV report.', '... and %s more plugins and themes in the CSV report.', $left, 'upshift' ), number_format_i18n( $left ) );
 		}
+		if ( 0 === $shown && 0 === $left ) {
+			// Ready: no blank lines and no pointer to a CSV of problems.
+			$lines   = array_slice( $lines, 0, 3 );
+			$total   = (int) $report['total'];
+			$lines[] = sprintf(
+				/* translators: %s: number of plugins and themes. */
+				_n( 'Checked %s plugin or theme. No problems found.', 'Checked %s plugins and themes. No problems found.', $total, 'upshift' ),
+				number_format_i18n( $total )
+			);
+			return implode( "\n", $lines );
+		}
 		$lines[] = '';
 		$lines[] = __( 'Full list with files and lines: Download report (CSV)', 'upshift' );
 		return implode( "\n", $lines );

@@ -138,9 +138,10 @@ class WatchTab {
 		echo '<ol class="upshift-stages">';
 		echo '<li class="upshift-stages__step is-current" aria-current="step"><span class="upshift-stages__marker" aria-hidden="true">1</span><span class="upshift-stages__text"><strong>' . esc_html__( 'Learning how your site normally behaves', 'upshift' ) . '</strong>';
 		/* translators: %s: date, for example "9 Nov". */
-		echo '<span>' . esc_html( sprintf( __( 'Collecting since %s', 'upshift' ), Report::date( $since ) ) ) . '</span>';
+		$collecting = sprintf( __( 'Collecting since %s', 'upshift' ), Report::date( $since ) );
 		/* translators: %s: PHP version. */
-		echo '<span>' . esc_html( sprintf( __( 'Your site runs PHP %s.', 'upshift' ), $report['php'] ) ) . '</span></span></li>';
+		$runs = sprintf( __( 'Your site runs PHP %s.', 'upshift' ), $report['php'] );
+		echo '<span class="upshift-stages__line">' . esc_html( $collecting . ' · ' . $runs ) . '</span></span></li>';
 		echo '<li class="upshift-stages__step"><span class="upshift-stages__marker" aria-hidden="true">2</span><span class="upshift-stages__text"><strong>' . esc_html__( 'Your host changes PHP', 'upshift' ) . '</strong></span></li>';
 		echo '<li class="upshift-stages__step"><span class="upshift-stages__marker" aria-hidden="true">3</span><span class="upshift-stages__text"><strong>' . esc_html__( '7-day comparison', 'upshift' ) . '</strong></span></li>';
 		echo '</ol>';

@@ -1,9 +1,9 @@
-=== Upshift ===
+=== Upshift - PHP Upgrade Check & Guard ===
 Contributors: qasimwp
 Tags: php, compatibility, php 8, upgrade, php version
 Requires at least: TO CONFIRM
 Tested up to: 7.1
-Requires PHP: TO CONFIRM
+Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html

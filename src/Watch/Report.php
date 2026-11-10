@@ -420,6 +420,10 @@ class Report {
 			/* translators: %s: PHP version. */
 			return sprintf( __( 'while on PHP %s', 'upshift' ), $state['back']['from'] );
 		}
+		// While the 7 days run the verdict is not final, so it says "so far"; "since ..." only once they ended.
+		if ( self::WATCHING === $phase ) {
+			return __( 'so far', 'upshift' );
+		}
 		return 'manual' === $state['source'] ? __( 'since you started comparing', 'upshift' ) : __( 'since the upgrade', 'upshift' );
 	}
 

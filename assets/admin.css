@@ -1201,8 +1201,8 @@ details[open] > summary .upshift-item__chevron {
 
 /* Upgrade guard waiting card: three steps. Raspberry marks only the current step. */
 .upshift-stages {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	display: flex;
+	flex-direction: column;
 	gap: var(--upshift-2);
 	margin: var(--upshift-2) 0;
 	padding: 0;
@@ -1210,11 +1210,22 @@ details[open] > summary .upshift-item__chevron {
 }
 
 .upshift-stages__step {
+	position: relative;
 	display: flex;
 	align-items: flex-start;
 	gap: var(--upshift-1);
 	margin: 0;
 	color: var(--upshift-muted);
+}
+
+/* Thin line from this marker down to the next one. */
+.upshift-stages__step:not(:last-child)::before {
+	content: "";
+	position: absolute;
+	inset-block: 30px calc(-1 * var(--upshift-2) + 2px);
+	inset-inline-start: 13px;
+	width: 2px;
+	background: var(--upshift-line);
 }
 
 .upshift-stages__marker {
@@ -1256,8 +1267,7 @@ details[open] > summary .upshift-item__chevron {
 }
 
 @media screen and (max-width: 782px) {
-	.upshift-help-grid,
-	.upshift-stages {
+	.upshift-help-grid {
 		grid-template-columns: minmax(0, 1fr);
 	}
 }

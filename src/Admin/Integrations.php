@@ -69,6 +69,32 @@ class Integrations {
 	}
 
 	/**
+	 * Filter plugin_action_links_{basename}: "Settings" and "Check my site" before the stock links.
+	 *
+	 * @param array $links Action links.
+	 * @return array
+	 */
+	public static function action_links( $links ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return $links;
+		}
+		$base = admin_url( 'tools.php' );
+		$mine = array(
+			'upshift_settings' => '<a href="' . esc_url(
+				add_query_arg(
+					array(
+						'page' => Page::SLUG,
+						'tab'  => 'settings',
+					),
+					$base
+				)
+			) . '">' . esc_html__( 'Settings', 'upshift' ) . '</a>',
+			'upshift_check'    => '<a href="' . esc_url( add_query_arg( 'page', Page::SLUG, $base ) ) . '">' . esc_html__( 'Check my site', 'upshift' ) . '</a>',
+		);
+		return array_merge( $mine, (array) $links );
+	}
+
+	/**
 	 * Filter plugin_row_meta: adds the badge after a check exists.
 	 *
 	 * @param array  $meta Row meta links.
