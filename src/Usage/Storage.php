@@ -40,6 +40,7 @@ class Storage {
 	const DELETE_CHUNK     = 5000;
 	const ORPHAN_PAGE      = 1000;
 	const ROW_OVERHEAD     = 200; // Bytes of a filesets row besides its list (columns, primary key, set_hash index), measured on dev.
+	const LOCK_SECONDS     = 900; // The rollup lock is held this long: the nightly budget plus a rebuild started at its end (DECISIONS D66).
 
 	/**
 	 * Fresh size of Upshift's own tables and options, and nothing else: the exact tables of Install::tables() and the
@@ -161,14 +162,16 @@ class Storage {
 		if ( null === $size || ( ! $nightly && $size['total'] <= self::CAP ) ) {
 			return false;
 		}
-		$status = Rollup::status();
-		if ( null !== Runner::latest( 'running' ) || $status['progress']['running'] ) {
+		if ( null !== Runner::latest( 'running' ) ) {
 			return false;
 		}
 		$deleted = Rollup::with_lock(
 			function () use ( $nightly, $now, $size ) {
-				return self::work( $nightly, $now, $size );
-			}
+				// Checked under the lock: a job started just before must finish first (DECISIONS D66).
+				$status = Rollup::status();
+				return $status['progress']['running'] ? false : self::work( $nightly, $now, $size );
+			},
+			self::LOCK_SECONDS
 		);
 		return true === $deleted;
 	}
@@ -186,6 +189,11 @@ class Storage {
 		$state    = self::state();
 
 		// An earlier delete that ran out of time: finish it first, or its leftovers would count as live data and cost more days.
+		// Never past a day that still waits for its fold (a cutoff saved by an older build could be; DECISIONS D66).
+		$open = Rollup::fold_day();
+		if ( ! empty( $state['pending_cutoff'] ) && '' !== $open && $open < $state['pending_cutoff'] ) {
+			$state['pending_cutoff'] = $open;
+		}
 		if ( ! empty( $state['pending_cutoff'] ) || ! empty( $state['orphans'] ) ) {
 			if ( ! empty( $state['pending_cutoff'] ) && ! self::delete_hits_before( $state['pending_cutoff'], $deadline ) ) {
 				self::save( $state );
@@ -203,9 +211,12 @@ class Storage {
 
 		$over   = $size['total'] > self::CAP;
 		$excess = self::live( $size ) - self::TARGET;
-		if ( $excess > 0 && ! $over && Rollup::fold_pending() ) {
-			// A finished day not folded yet: the daily rollup folds it to a few KB, so no day is deleted for it.
-			$excess = 0;
+		if ( $excess > 0 && Rollup::fold_pending() ) {
+			// A finished day not folded yet, even above the cap: it is folded first (to a few KB), and no day is deleted or
+			// rebuilt before that (DECISIONS D66). The fold starts now instead of waiting for the daily run.
+			self::rollup_soon();
+			self::save( $state );
+			return false;
 		}
 		if ( $excess <= 0 ) {
 			// Only empty space to win back.
@@ -403,6 +414,15 @@ class Storage {
 		if ( count( $all ) < 2 ) {
 			return 0;
 		}
+		// The newest day always stays, and so does every day from the first one still waiting for its fold (DECISIONS D66).
+		$open       = Rollup::fold_day();
+		$candidates = array();
+		foreach ( array_slice( $all, 0, count( $all ) - 1 ) as $day ) {
+			if ( '' !== $open && $day >= $open ) {
+				break;
+			}
+			$candidates[] = $day;
+		}
 
 		// A day in the hit rows costs its share of the hit rows and of the stored sets.
 		$hits    = isset( $size['tables']['fileset_hits'] ) ? $size['tables']['fileset_hits']['data'] + $size['tables']['fileset_hits']['index'] : 0;
@@ -411,9 +431,9 @@ class Storage {
 
 		// Every day but the newest together can't cover the excess (folded days are a few KB each): deleting would only
 		// lose history.
-		$most = $per_raw * count( array_diff( $raw, array( end( $all ) ) ) );
-		foreach ( $folded as $day => $bytes ) {
-			$most += end( $all ) === $day ? 0 : $bytes;
+		$most = 0;
+		foreach ( $candidates as $day ) {
+			$most += ( isset( $folded[ $day ] ) ? $folded[ $day ] : 0 ) + ( in_array( $day, $raw, true ) ? $per_raw : 0 );
 		}
 		if ( $most < $excess ) {
 			return 0;
@@ -422,7 +442,7 @@ class Storage {
 		$gone       = array();
 		$raw_cutoff = '';
 		$freed      = 0;
-		foreach ( array_slice( $all, 0, count( $all ) - 1 ) as $day ) {
+		foreach ( $candidates as $day ) {
 			if ( $freed >= $excess ) {
 				break;
 			}
@@ -443,7 +463,8 @@ class Storage {
 		}
 		if ( '' !== $raw_cutoff ) {
 			// Delete hit rows up to and including the last day chosen.
-			$cutoff = wp_date( 'Y-m-d', strtotime( $raw_cutoff . ' 12:00:00 UTC' ) + DAY_IN_SECONDS );
+			// Date arithmetic in UTC: wp_date() of noon UTC is already the next day east of UTC+12 (DECISIONS D66).
+			$cutoff = gmdate( 'Y-m-d', strtotime( $raw_cutoff . ' 00:00:00 UTC' ) + DAY_IN_SECONDS );
 			if ( ! self::delete_hits_before( $cutoff, $deadline ) ) {
 				$state['pending_cutoff'] = $cutoff;
 			}

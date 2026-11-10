@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-10T13:07:00+01:00\n"
+"POT-Creation-Date: 2026-11-10T19:16:49+01:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: upshift\n"
@@ -1324,17 +1324,17 @@ msgid "Runs on: %s"
 msgstr ""
 
 #: src/Report/Check.php:500
-#: src/Usage/Recorder.php:869
+#: src/Usage/Recorder.php:877
 msgid "checkout"
 msgstr ""
 
 #: src/Report/Check.php:501
-#: src/Usage/Recorder.php:870
+#: src/Usage/Recorder.php:878
 msgid "cart"
 msgstr ""
 
 #: src/Report/Check.php:502
-#: src/Usage/Recorder.php:872
+#: src/Usage/Recorder.php:880
 msgid "shop"
 msgstr ""
 
@@ -1351,12 +1351,12 @@ msgid "site pages"
 msgstr ""
 
 #: src/Report/Check.php:506
-#: src/Usage/Recorder.php:863
+#: src/Usage/Recorder.php:871
 msgid "admin"
 msgstr ""
 
 #: src/Report/Check.php:507
-#: src/Usage/Recorder.php:868
+#: src/Usage/Recorder.php:876
 msgid "login"
 msgstr ""
 
@@ -2269,49 +2269,51 @@ msgstr ""
 msgid "request died while scanning (memory/time limit)"
 msgstr ""
 
-#: src/Usage/Health.php:66
+#: src/Usage/Health.php:67
 msgid "Upshift's hourly job has not run for more than a day, so Smart results is not being updated. WordPress scheduled tasks (WP-Cron) may be off on this site. Your host can check this."
 msgstr ""
 
 #. translators: %s: number of page views.
-#: src/Usage/Health.php:74
+#: src/Usage/Health.php:75
 #, php-format
 msgid "Upshift could not save %s page view because of a database problem. Recording continues by itself."
 msgid_plural "Upshift could not save %s page views because of a database problem. Recording continues by itself."
 msgstr[0] ""
 msgstr[1] ""
 
-#. translators: 1: page views without a file list, 2: all page views.
-#: src/Usage/Health.php:83
+#. translators: 1: number of days, 2: page views without a file list, 3: all page views of those days.
+#: src/Usage/Health.php:87
 #, php-format
-msgid "%1$s of %2$s page views have no list of files, so Smart results is incomplete for them. They are removed after 30 days."
-msgstr ""
+msgid "In the last %1$s day, %2$s of %3$s recorded page views were saved without their list of files, so Smart results may miss where some code runs. Recording continues normally."
+msgid_plural "In the last %1$s days, %2$s of %3$s recorded page views were saved without their list of files, so Smart results may miss where some code runs. Recording continues normally."
+msgstr[0] ""
+msgstr[1] ""
 
-#: src/Usage/Recorder.php:862
+#: src/Usage/Recorder.php:870
 msgid "front end"
 msgstr ""
 
-#: src/Usage/Recorder.php:864
+#: src/Usage/Recorder.php:872
 msgid "ajax"
 msgstr ""
 
-#: src/Usage/Recorder.php:865
+#: src/Usage/Recorder.php:873
 msgid "rest"
 msgstr ""
 
-#: src/Usage/Recorder.php:866
+#: src/Usage/Recorder.php:874
 msgid "cron"
 msgstr ""
 
-#: src/Usage/Recorder.php:867
+#: src/Usage/Recorder.php:875
 msgid "cli"
 msgstr ""
 
-#: src/Usage/Recorder.php:871
+#: src/Usage/Recorder.php:879
 msgid "product"
 msgstr ""
 
-#: src/Usage/Recorder.php:873
+#: src/Usage/Recorder.php:881
 msgid "account"
 msgstr ""
 

@@ -679,7 +679,7 @@ class CheckTab {
 	 */
 	public static function csv_rows( array $scan ) {
 		$meta  = Rollup::meta();
-		$days  = false !== $meta ? (int) $meta['days_observed'] : 0;
+		$days  = Rollup::days_shown( $meta );
 		$names = Check::names( Status::for_scan( $scan ) );
 		$rows  = array();
 		$notes = array();

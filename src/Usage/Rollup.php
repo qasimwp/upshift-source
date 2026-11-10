@@ -48,6 +48,7 @@ class Rollup {
 	const MEMORY_ROOM    = 33554432;
 	const MAX_RESTARTS   = 3;
 	const STOPPED        = 'upshift_rollup_stopped';
+	const RECENT_DAYS    = 3; // Days the "no list of files" notice looks at (DECISIONS D66).
 
 	const COMPACT_STEP_HOOK = 'upshift_compact_step';
 	const COMPACT_RETRY     = 60;
@@ -60,6 +61,13 @@ class Rollup {
 	 * @var string
 	 */
 	private static $token = '';
+
+	/**
+	 * Seconds the lock held by this process lasts after each hold() (Storage takes it for longer, DECISIONS D66).
+	 *
+	 * @var int
+	 */
+	private static $ttl = self::LOCK_TTL;
 
 	/**
 	 * Dictionary while the lock is held: path key => file id. Null = not loaded.
@@ -155,14 +163,16 @@ class Rollup {
 	 * Runs a callback under the step lock, for other lock-holding work (DECISIONS D63).
 	 *
 	 * @param callable $callback Callback.
+	 * @param int      $ttl      Seconds the lock lasts: at least as long as the callback may run (DECISIONS D66).
 	 * @return mixed Callback result, or null when another step holds the lock.
 	 */
-	public static function with_lock( $callback ) {
-		$token = self::lock();
+	public static function with_lock( $callback, $ttl = self::LOCK_TTL ) {
+		$token = self::lock( $ttl );
 		if ( false === $token ) {
 			return null;
 		}
 		self::begin( $token );
+		self::$ttl = max( self::LOCK_TTL, (int) $ttl );
 		try {
 			return call_user_func( $callback );
 		} finally {
@@ -190,6 +200,7 @@ class Rollup {
 	private static function end( $token ) {
 		self::unlock( $token );
 		self::$token = '';
+		self::$ttl   = self::LOCK_TTL;
 	}
 
 	/**
@@ -565,6 +576,29 @@ class Rollup {
 	}
 
 	/**
+	 * Days the Check tab may name in "not seen running in the last N days": the days of the last rollup, but never more than
+	 * the days still kept, so a day the storage cap deleted is not counted until the next rollup (DECISIONS D66).
+	 *
+	 * @param array|false $meta meta().
+	 * @return int
+	 */
+	public static function days_shown( $meta ) {
+		global $wpdb;
+
+		if ( false === $meta ) {
+			return 0;
+		}
+		$days     = (int) $meta['days_observed'];
+		$hits     = Install::table( 'fileset_hits' );
+		$folded   = Install::table( 'usage_days' );
+		$suppress = $wpdb->suppress_errors( true );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table names from $wpdb->prefix.
+		$kept = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM (SELECT DISTINCT day FROM {$hits} UNION SELECT DISTINCT day FROM {$folded} WHERE day >= %s) d", wp_date( 'Y-m-d', time() - self::RETENTION_DAYS * DAY_IN_SECONDS ) ) );
+		$wpdb->suppress_errors( $suppress );
+		return null === $kept ? $days : min( $days, (int) $kept );
+	}
+
+	/**
 	 * Runs steps until the job is done (WP-CLI). Starts a job if none is running. Waits while another process
 	 * holds the lock.
 	 *
@@ -739,12 +773,13 @@ class Rollup {
 	 * unique option_name is atomic; an expired lock (a step that died) is taken over by compare-and-swap. Same
 	 * pattern as the scan lock (DECISIONS D47).
 	 *
+	 * @param int $ttl Seconds until the lock expires.
 	 * @return string|false Token, or false when another step holds it.
 	 */
-	private static function lock() {
+	private static function lock( $ttl = self::LOCK_TTL ) {
 		global $wpdb;
 		$token = wp_generate_password( 12, false );
-		$value = $token . '|' . ( time() + self::LOCK_TTL );
+		$value = $token . '|' . ( time() + max( self::LOCK_TTL, (int) $ttl ) );
 		if ( 1 === $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')", self::LOCK, $value ) ) ) {
 			return $token;
 		}
@@ -771,7 +806,7 @@ class Rollup {
 			return false;
 		}
 		$mine = $wpdb->esc_like( self::$token . '|' ) . '%';
-		if ( 1 === $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value LIKE %s", self::$token . '|' . ( time() + self::LOCK_TTL ), self::LOCK, $mine ) ) ) {
+		if ( 1 === $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value LIKE %s", self::$token . '|' . ( time() + self::$ttl ), self::LOCK, $mine ) ) ) {
 			return true;
 		}
 		// 0 rows also when the value didn't change (same second).
@@ -1152,8 +1187,13 @@ class Rollup {
 		$overhead = $wpdb->get_row( "SELECT COALESCE(SUM(hits), 0) AS hits, COALESCE(SUM(prep_ms_total), 0) AS prep_ms_total, COALESCE(MAX(prep_ms_max), 0) AS prep_ms_max, COALESCE(SUM(slow_hits), 0) AS slow_hits, COALESCE(SUM(req_hits), 0) AS req_hits, COALESCE(SUM(req_ms_total), 0) AS req_ms_total, COALESCE(SUM(ovh_0), 0) AS ovh_0, COALESCE(SUM(ovh_1), 0) AS ovh_1, COALESCE(SUM(ovh_2), 0) AS ovh_2, COALESCE(SUM(ovh_3), 0) AS ovh_3, COALESCE(SUM(ovh_4), 0) AS ovh_4, COALESCE(SUM(ovh_5), 0) AS ovh_5, COALESCE(SUM(ovh_6), 0) AS ovh_6, COUNT(DISTINCT day) AS days, MIN(day) AS first_day, MAX(day) AS last_day FROM {$hits_table}{$where}", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
 		self::check_db( 'fileset_hits' );
 		$overhead = is_array( $overhead ) ? $overhead : array();
+		$by_day   = self::lost_by_day( $day );
 		if ( isset( $state['extra'] ) ) {
-			$sampled += self::add_extra( $overhead, $state['extra'] );
+			$sampled += self::add_extra( $overhead, $state['extra'], $by_day );
+		}
+		$lost = 0;
+		foreach ( $by_day as $counts ) {
+			$lost += $counts[1];
 		}
 		$hist    = array();
 		$buckets = count( Recorder::OVERHEAD_EDGES );
@@ -1169,7 +1209,10 @@ class Rollup {
 			'time'             => 0,
 			'requests'         => $requests,
 			'sampled_requests' => $sampled,
-			'unmapped_hits'    => $sampled - $state['mapped'],
+			// Counted directly, never as "sampled minus mapped": hits that arrive while a job runs, or sets stored after it
+			// started, are not losses (DECISIONS D66).
+			'unmapped_hits'    => $lost,
+			'recent'           => self::recent( $by_day ),
 			'days_observed'    => isset( $overhead['days'] ) ? (int) $overhead['days'] : 0,
 			'first_day'        => isset( $overhead['first_day'] ) ? (string) $overhead['first_day'] : '',
 			'last_day'         => isset( $overhead['last_day'] ) ? (string) $overhead['last_day'] : '',
@@ -1713,12 +1756,13 @@ class Rollup {
 	}
 
 	/**
-	 * The oldest finished day (before today, within the retention period) that still has hit rows, or ''.
+	 * The oldest finished day (before today, within the retention period) that still has hit rows, or ''. The storage cap
+	 * never deletes this day or a later one: a day is folded before its hit rows go (DECISIONS D66).
 	 *
 	 * @return string
 	 * @throws \RuntimeException On a DB error.
 	 */
-	private static function fold_day() {
+	public static function fold_day() {
 		global $wpdb;
 
 		$table  = Install::table( 'fileset_hits' );
@@ -1919,20 +1963,79 @@ class Rollup {
 	}
 
 	/**
+	 * Page views per day in the hit rows, and those whose file list is really missing: no stored set at all. A set that
+	 * exists but lists no plugin or theme file is not a loss (DECISIONS D66).
+	 *
+	 * @param string $day Only this day (Y-m-d), or '' for all.
+	 * @return array Y-m-d => array( page views, page views without a file list ).
+	 * @throws \RuntimeException On a DB error.
+	 */
+	private static function lost_by_day( $day ) {
+		global $wpdb;
+
+		$hits  = Install::table( 'fileset_hits' );
+		$sets  = Install::table( 'filesets' );
+		$where = '' === $day ? '' : $wpdb->prepare( ' WHERE h.day = %s', $day );
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table names from $wpdb->prefix; $where is prepared.
+		$rows = (array) $wpdb->get_results( "SELECT h.day AS day, SUM(h.hits) AS hits, SUM(CASE WHEN s.id IS NULL THEN h.hits ELSE 0 END) AS lost FROM {$hits} h LEFT JOIN {$sets} s ON s.set_hash = h.set_hash{$where} GROUP BY h.day", ARRAY_A );
+		self::check_db( 'fileset_hits' );
+		$out = array();
+		foreach ( $rows as $row ) {
+			$out[ (string) $row['day'] ] = array( (int) $row['hits'], (int) $row['lost'] );
+		}
+		return $out;
+	}
+
+	/**
+	 * Page views and losses of the newest RECENT_DAYS days, for the Settings notice: old losses are history, not a
+	 * current problem (DECISIONS D66).
+	 *
+	 * @param array $by_day Y-m-d => array( page views, without a file list ).
+	 * @return array days, from (Y-m-d), sampled, lost.
+	 */
+	private static function recent( array $by_day ) {
+		$out = array(
+			'days'    => self::RECENT_DAYS,
+			'from'    => '',
+			'sampled' => 0,
+			'lost'    => 0,
+		);
+		if ( empty( $by_day ) ) {
+			return $out;
+		}
+		ksort( $by_day );
+		$out['from'] = gmdate( 'Y-m-d', strtotime( max( array_keys( $by_day ) ) . ' 00:00:00 UTC' ) - ( self::RECENT_DAYS - 1 ) * DAY_IN_SECONDS );
+		foreach ( $by_day as $day => $counts ) {
+			if ( $day >= $out['from'] ) {
+				$out['sampled'] += $counts[0];
+				$out['lost']    += $counts[1];
+			}
+		}
+		return $out;
+	}
+
+	/**
 	 * Adds the folded days' request counts and overhead to the hit-row figures of totals().
 	 *
 	 * @param array $overhead totals() overhead row (changed: sums, days, first and last day).
 	 * @param array $extra    $state['extra'] from add_days().
+	 * @param array $by_day   lost_by_day() (changed: the folded days are added).
 	 * @return int Sampled requests of the folded days.
 	 * @throws \RuntimeException On a DB error.
 	 */
-	private static function add_extra( array &$overhead, array $extra ) {
+	private static function add_extra( array &$overhead, array $extra, array &$by_day ) {
 		global $wpdb;
 
 		$sampled = 0;
-		foreach ( $extra['metas'] as $meta ) {
+		foreach ( $extra['metas'] as $i => $meta ) {
 			$o        = $meta['overhead'];
 			$sampled += (int) $meta['sampled_requests'];
+			$day      = (string) $extra['days'][ $i ];
+			if ( ! isset( $by_day[ $day ] ) ) {
+				$by_day[ $day ] = array( 0, 0 );
+			}
+			$by_day[ $day ][0] += (int) $meta['sampled_requests'];
+			$by_day[ $day ][1] += max( 0, (int) $meta['unmapped_hits'] );
 			foreach ( array( 'hits', 'prep_ms_total', 'slow_hits', 'req_hits', 'req_ms_total' ) as $key ) {
 				$overhead[ $key ] = ( isset( $overhead[ $key ] ) ? (float) $overhead[ $key ] : 0 ) + (float) $o[ $key ];
 			}

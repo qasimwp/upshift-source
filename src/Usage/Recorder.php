@@ -151,27 +151,28 @@ class Recorder {
 	}
 
 	/**
-	 * Limits row-lock waits for this connection to 1 s (DECISIONS D18). The old value is kept
-	 * in the session variable @upshift_lwt. Callers suppress DB errors.
+	 * Limits row-lock and table-lock (metadata) waits for this connection to 1 s (DECISIONS D18, D66): a table rebuild or
+	 * a backup can hold a table lock for minutes, and a visitor's page must not wait for it. The old values are kept in
+	 * the session variables @upshift_lwt and @upshift_mlwt. Callers suppress DB errors.
 	 *
 	 * @return bool Whether the limit was set (only then call restore_lock_wait()).
 	 */
 	public static function limit_lock_wait() {
 		global $wpdb;
 		try {
-			return false !== $wpdb->query( 'SET @upshift_lwt = @@SESSION.innodb_lock_wait_timeout, SESSION innodb_lock_wait_timeout = 1' );
+			return false !== $wpdb->query( 'SET @upshift_lwt = @@SESSION.innodb_lock_wait_timeout, @upshift_mlwt = @@SESSION.lock_wait_timeout, SESSION innodb_lock_wait_timeout = 1, SESSION lock_wait_timeout = 1' );
 		} catch ( \Throwable $e ) {
 			return false;
 		}
 	}
 
 	/**
-	 * Restores the lock wait timeout saved by limit_lock_wait().
+	 * Restores the lock wait timeouts saved by limit_lock_wait().
 	 */
 	public static function restore_lock_wait() {
 		global $wpdb;
 		try {
-			$wpdb->query( 'SET SESSION innodb_lock_wait_timeout = @upshift_lwt' );
+			$wpdb->query( 'SET SESSION innodb_lock_wait_timeout = @upshift_lwt, SESSION lock_wait_timeout = @upshift_mlwt' );
 		} catch ( \Throwable $e ) {
 			return;
 		}
@@ -544,24 +545,30 @@ class Recorder {
 			return true;
 		}
 		// Without this, later requests only update the hit row and the file list stays missing all day (DECISIONS D63).
-		self::remove_hit( $hash, $day, $context );
-		self::note_drop( 'set' );
+		self::note_drop( 'set', self::remove_hit( $hash, $day, $context ) );
 		return false;
 	}
 
 	/**
-	 * Removes the hit row of a set that could not be stored, so the next request with this set is "new" again. Only a row
-	 * still at 1 hit: a row another request has counted since keeps its count. Failure path only.
+	 * Removes the hit row of a set that could not be stored, so the next request with this set is "new" again and stores
+	 * the list. Also a row other requests counted meanwhile: without a list its page views could only count as lost, and
+	 * they are counted as dropped instead (DECISIONS D66). Compare-and-delete on the count read. Failure path only.
 	 *
 	 * @param string $hash    Set hash.
 	 * @param string $day     Y-m-d.
 	 * @param int    $context Context bitmask.
+	 * @return int Page views removed (at least 1: this request's).
 	 */
 	private static function remove_hit( $hash, $day, $context ) {
 		global $wpdb;
 
 		$table = $wpdb->prefix . 'upshift_fileset_hits';
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE set_hash = %s AND day = %s AND context = %d AND hits = 1", $hash, $day, $context ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
+		$hits = (int) $wpdb->get_var( $wpdb->prepare( "SELECT hits FROM {$table} WHERE set_hash = %s AND day = %s AND context = %d", $hash, $day, $context ) );
+		if ( $hits > 0 && 1 === (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE set_hash = %s AND day = %s AND context = %d AND hits = %d", $hash, $day, $context, $hits ) ) ) { // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
+			return $hits;
+		}
+		return 1;
 	}
 
 	/**
@@ -569,13 +576,14 @@ class Recorder {
 	 * Reasons: hit (the counter could not be written), set (the file list could not be stored), error (an exception).
 	 *
 	 * @param string $reason Reason.
+	 * @param int    $count  Page views.
 	 */
-	private static function note_drop( $reason ) {
+	private static function note_drop( $reason, $count = 1 ) {
 		$flags = self::flags();
 		if ( ! isset( $flags['dropped'] ) || ! is_array( $flags['dropped'] ) ) {
 			$flags['dropped'] = array();
 		}
-		$flags['dropped'][ $reason ] = ( isset( $flags['dropped'][ $reason ] ) ? (int) $flags['dropped'][ $reason ] : 0 ) + 1;
+		$flags['dropped'][ $reason ] = ( isset( $flags['dropped'][ $reason ] ) ? (int) $flags['dropped'][ $reason ] : 0 ) + max( 1, (int) $count );
 		$flags['dropped_at']         = time();
 		self::save_flags( $flags );
 	}

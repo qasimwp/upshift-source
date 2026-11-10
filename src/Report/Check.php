@@ -46,7 +46,7 @@ class Check {
 	 */
 	public static function build( array $scan, array $summary ) {
 		$meta      = Rollup::meta();
-		$days      = false !== $meta ? (int) $meta['days_observed'] : 0;
+		$days      = Rollup::days_shown( $meta );
 		$scan_id   = (int) $scan['id'];
 		$target    = (string) $scan['target_version'];
 		$from      = (string) $scan['from_version'];

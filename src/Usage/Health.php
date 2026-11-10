@@ -18,10 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Health {
 
-	const HEARTBEAT    = 'upshift_compact_last';
-	const OVERDUE      = DAY_IN_SECONDS;
-	const DROP_WINDOW  = 7 * DAY_IN_SECONDS;
-	const UNMAPPED_MIN = 0.01;
+	const HEARTBEAT   = 'upshift_compact_last';
+	const OVERDUE     = DAY_IN_SECONDS;
+	const DROP_WINDOW = 7 * DAY_IN_SECONDS;
+	const LOST_SHARE  = 0.05; // Share of the recent page views without a file list before the notice shows (DECISIONS D66).
+	const LOST_MIN    = 50;   // And at least this many.
 
 	/**
 	 * Dropped page views by reason, from the recorder flags.
@@ -76,13 +77,17 @@ class Health {
 			);
 		}
 
-		$meta = Rollup::meta();
-		if ( false !== $meta && ! empty( $meta['sampled_requests'] ) && (int) $meta['unmapped_hits'] / (int) $meta['sampled_requests'] >= self::UNMAPPED_MIN ) {
+		// Only a large loss in the newest days of the last finished rollup: stable data (a running job or cleanup never changes
+		// it), and old losses are history. A meta without these figures (an older build's) shows nothing (DECISIONS D66).
+		$meta   = Rollup::meta();
+		$recent = false !== $meta && isset( $meta['recent']['sampled'], $meta['recent']['lost'] ) ? $meta['recent'] : null;
+		if ( null !== $recent && (int) $recent['lost'] >= self::LOST_MIN && (int) $recent['lost'] >= self::LOST_SHARE * (int) $recent['sampled'] ) {
 			$out[] = sprintf(
-				/* translators: 1: page views without a file list, 2: all page views. */
-				__( '%1$s of %2$s page views have no list of files, so Smart results is incomplete for them. They are removed after 30 days.', 'upshift' ),
-				number_format_i18n( (int) $meta['unmapped_hits'] ),
-				number_format_i18n( (int) $meta['sampled_requests'] )
+				/* translators: 1: number of days, 2: page views without a file list, 3: all page views of those days. */
+				_n( 'In the last %1$s day, %2$s of %3$s recorded page views were saved without their list of files, so Smart results may miss where some code runs. Recording continues normally.', 'In the last %1$s days, %2$s of %3$s recorded page views were saved without their list of files, so Smart results may miss where some code runs. Recording continues normally.', (int) $recent['days'], 'upshift' ),
+				number_format_i18n( (int) $recent['days'] ),
+				number_format_i18n( (int) $recent['lost'] ),
+				number_format_i18n( (int) $recent['sampled'] )
 			);
 		}
 		return $out;
