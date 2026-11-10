@@ -1,0 +1,1267 @@
+/* Upshift admin. Scoped to .upshift-wrap; loaded only on Tools > PHP Upgrade (docs/UI-v1.md 8a). */
+
+.upshift-wrap {
+	--upshift-text: #1d2327;
+	--upshift-muted: #50575e;
+	--upshift-line: #dcdcde;
+	--upshift-surface: #fff;
+
+	/* Brand (docs/BRAND.md). Controls and links only, never a status. */
+	--upshift-brand: #a3245f;
+	--upshift-brand-hover: #8a1e50;
+	--upshift-brand-pressed: #701840;
+	--upshift-brand-soft: #fbeaf2;
+	--upshift-accent: var(--upshift-brand);
+
+	/* WordPress draws checkboxes and radios from these (newer versions). */
+	--wp-admin-theme-color: var(--upshift-brand);
+	--wp-admin-theme-color-darker-10: var(--upshift-brand-hover);
+	--wp-admin-theme-color-darker-20: var(--upshift-brand-pressed);
+
+	/* Neutral surface for anything that is status-like but not red, orange, yellow or green. */
+	--upshift-neutral-soft: #f6f7f7;
+
+	--upshift-red: #c62828;
+	--upshift-red-soft: #fdecec;
+	--upshift-red-text: #c62828;
+	--upshift-orange: #c26a00;
+	--upshift-orange-soft: #fcf1e3;
+	--upshift-orange-text: #7a4300;
+	--upshift-yellow: #dba617;
+	--upshift-yellow-soft: #fcf9e8;
+	--upshift-yellow-text: #614200;
+	--upshift-green: #00a32a;
+	--upshift-green-soft: #edfaef;
+	--upshift-green-text: #005c12;
+
+	--upshift-1: 8px;
+	--upshift-2: 16px;
+	--upshift-3: 24px;
+	--upshift-4: 32px;
+	--upshift-radius: 8px;
+	--upshift-bold: 600;
+
+	color: var(--upshift-text);
+}
+
+.upshift-wrap [hidden] {
+	display: none !important;
+}
+
+.upshift-tab {
+	max-width: 1120px;
+	padding-block-start: var(--upshift-3);
+}
+
+.upshift-muted {
+	color: var(--upshift-muted);
+}
+
+.upshift-offscreen {
+	position: absolute;
+	inset-inline-start: -9999px;
+	width: 1px;
+	height: 1px;
+}
+
+.upshift-wrap :focus-visible {
+	outline: 2px solid var(--upshift-brand);
+	outline-offset: 2px;
+}
+
+/* Links. */
+.upshift-wrap a:not(.button),
+.wp-core-ui .upshift-wrap .button-link {
+	color: var(--upshift-brand);
+}
+
+.upshift-wrap a:not(.button):hover,
+.wp-core-ui .upshift-wrap .button-link:hover {
+	color: var(--upshift-brand-hover);
+}
+
+.upshift-wrap a:not(.button):active {
+	color: var(--upshift-brand-pressed);
+}
+
+/* Buttons. Under .wp-core-ui so that no admin colour scheme can win. */
+.wp-core-ui .upshift-wrap .button-primary:not(:disabled) {
+	background: var(--upshift-brand);
+	border-color: var(--upshift-brand);
+	color: #fff;
+}
+
+.wp-core-ui .upshift-wrap .button-primary:not(:disabled):hover {
+	background: var(--upshift-brand-hover);
+	border-color: var(--upshift-brand-hover);
+	color: #fff;
+}
+
+.wp-core-ui .upshift-wrap .button-primary:not(:disabled):active {
+	background: var(--upshift-brand-pressed);
+	border-color: var(--upshift-brand-pressed);
+	color: #fff;
+}
+
+.wp-core-ui .upshift-wrap .button:not(.button-primary):not(:disabled) {
+	background: #fff;
+	border-color: var(--upshift-brand);
+	color: var(--upshift-brand);
+}
+
+.wp-core-ui .upshift-wrap .button:not(.button-primary):not(:disabled):hover {
+	background: var(--upshift-brand-soft);
+	border-color: var(--upshift-brand-hover);
+	color: var(--upshift-brand-hover);
+}
+
+.wp-core-ui .upshift-wrap .button:not(.button-primary):not(:disabled):active {
+	background: var(--upshift-brand-soft);
+	border-color: var(--upshift-brand-pressed);
+	color: var(--upshift-brand-pressed);
+}
+
+/* WordPress hides the outline on these and rings them with its own colour. */
+.wp-core-ui .upshift-wrap .button:focus,
+.wp-core-ui .upshift-wrap .button-link:focus,
+.wp-core-ui .upshift-wrap a:not(.upshift-tabs__tab):focus,
+.wp-core-ui .upshift-wrap input:focus,
+.wp-core-ui .upshift-wrap select:focus,
+.wp-core-ui .upshift-wrap summary:focus-visible {
+	border-color: var(--upshift-brand);
+	box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--upshift-brand);
+	outline: 2px solid transparent;
+}
+
+/* Tabs: no ring after a mouse click. The keyboard ring is drawn inside the tab, so it never covers the underline. */
+.wp-core-ui .upshift-wrap a.upshift-tabs__tab:focus {
+	box-shadow: none;
+	outline: 0;
+}
+
+.wp-core-ui .upshift-wrap a.upshift-tabs__tab:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--upshift-brand);
+	outline: 2px solid transparent;
+	outline-offset: -2px;
+}
+
+.wp-core-ui .upshift-wrap select:hover {
+	color: var(--upshift-brand);
+}
+
+/* Checkboxes and radios: filled brand with a white mark, on every WordPress version. */
+.upshift-wrap input[type="checkbox"]:checked,
+.upshift-wrap input[type="radio"]:checked {
+	background: var(--upshift-brand);
+	border-color: var(--upshift-brand);
+}
+
+.upshift-wrap input[type="checkbox"]:checked::before {
+	content: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27%23ffffff%27%2F%3E%3C%2Fsvg%3E");
+}
+
+.upshift-wrap input[type="radio"]:checked::before {
+	background-color: #fff;
+}
+
+/* Our own tabs. */
+.upshift-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-block-start: var(--upshift-2);
+	border-block-end: 1px solid var(--upshift-line);
+}
+
+.upshift-wrap a.upshift-tabs__tab {
+	padding: var(--upshift-1) var(--upshift-2);
+	border-block-end: 3px solid transparent;
+	border-start-start-radius: var(--upshift-radius);
+	border-start-end-radius: var(--upshift-radius);
+	color: var(--upshift-muted);
+	font-size: 14px;
+	font-weight: var(--upshift-bold);
+	text-decoration: none;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.upshift-wrap a.upshift-tabs__tab:hover {
+	background: var(--upshift-brand-soft);
+	color: var(--upshift-brand-hover);
+}
+
+.upshift-wrap a.upshift-tabs__tab.is-active {
+	border-block-end-color: var(--upshift-brand);
+	color: var(--upshift-brand);
+}
+
+.upshift-wrap h2 {
+	margin-block: 0 var(--upshift-2);
+	font-size: 18px;
+	font-weight: var(--upshift-bold);
+}
+
+.upshift-section {
+	margin-block-start: var(--upshift-4);
+}
+
+.upshift-card {
+	padding: var(--upshift-3);
+	background: var(--upshift-surface);
+	border: 1px solid var(--upshift-line);
+	border-radius: var(--upshift-radius);
+}
+
+/* Slim strip: PHP version, target, scope. */
+.upshift-strip {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--upshift-1) var(--upshift-3);
+	margin-block-end: var(--upshift-2);
+	color: var(--upshift-muted);
+}
+
+.upshift-strip p,
+.upshift-strip fieldset {
+	margin: 0;
+}
+
+.upshift-strip__php {
+	font-weight: var(--upshift-bold);
+}
+
+.upshift-strip__scope label {
+	display: inline-flex;
+	align-items: center;
+	margin-inline-end: var(--upshift-2);
+}
+
+.upshift-strip__note {
+	flex-basis: 100%;
+}
+
+/* Hero answer card. */
+.upshift-hero {
+	display: flex;
+	align-items: center;
+	gap: var(--upshift-3);
+	padding: var(--upshift-3);
+	border: 1px solid transparent;
+	border-radius: var(--upshift-radius);
+}
+
+.upshift-hero--green {
+	background: var(--upshift-green-soft);
+	border-color: var(--upshift-green);
+}
+
+.upshift-hero--yellow {
+	background: var(--upshift-yellow-soft);
+	border-color: var(--upshift-yellow);
+}
+
+.upshift-hero--orange {
+	background: var(--upshift-orange-soft);
+	border-color: var(--upshift-orange);
+}
+
+.upshift-hero--red {
+	background: var(--upshift-red-soft);
+	border-color: var(--upshift-red);
+}
+
+.upshift-hero__icon.dashicons {
+	flex: none;
+	width: 48px;
+	height: 48px;
+	font-size: 48px;
+}
+
+.upshift-hero--green .upshift-hero__icon {
+	color: var(--upshift-green-text);
+}
+
+.upshift-hero--yellow .upshift-hero__icon {
+	color: var(--upshift-yellow-text);
+}
+
+.upshift-hero--orange .upshift-hero__icon {
+	color: var(--upshift-orange-text);
+}
+
+.upshift-hero--red .upshift-hero__icon {
+	color: var(--upshift-red-text);
+}
+
+.upshift-hero__body {
+	flex: 1;
+	min-width: 0;
+}
+
+.upshift-wrap .upshift-hero__answer {
+	margin-block-end: var(--upshift-1);
+	font-size: 22px;
+	line-height: 1.3;
+}
+
+.upshift-hero__body p {
+	margin-block: 0 var(--upshift-1);
+}
+
+.upshift-hero__changed {
+	font-weight: var(--upshift-bold);
+}
+
+.upshift-hero__changed .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+	vertical-align: text-bottom;
+}
+
+.upshift-hero__action {
+	flex: none;
+}
+
+.upshift-path {
+	display: flex;
+	align-items: center;
+	gap: var(--upshift-1);
+}
+
+.upshift-pill {
+	padding: 0 var(--upshift-1);
+	background: var(--upshift-surface);
+	border: 1px solid var(--upshift-line);
+	border-radius: 999px;
+	font-weight: var(--upshift-bold);
+	line-height: 24px;
+}
+
+[dir="rtl"] .upshift-path__arrow {
+	transform: scaleX(-1);
+}
+
+/* Notes. */
+.upshift-note {
+	margin-block-start: var(--upshift-2);
+	padding: var(--upshift-1) var(--upshift-2);
+	border-radius: var(--upshift-radius);
+	border-inline-start: 4px solid var(--upshift-yellow);
+	background: var(--upshift-yellow-soft);
+}
+
+.upshift-note p {
+	margin-block: var(--upshift-1);
+	max-width: 70ch;
+}
+
+.upshift-note ul {
+	margin-block: var(--upshift-1);
+	max-width: 70ch;
+}
+
+/* Count cards. */
+.upshift-cards {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: var(--upshift-2);
+	margin-block-start: var(--upshift-3);
+}
+
+.upshift-count {
+	padding: var(--upshift-2);
+	background: var(--upshift-surface);
+	border: 1px solid var(--upshift-line);
+	border-inline-start-width: 4px;
+	border-radius: var(--upshift-radius);
+	text-align: start;
+	color: inherit;
+	cursor: pointer;
+	transition: box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.upshift-count:hover:not(:disabled) {
+	background: #f6f7f7;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	transform: translateY(-1px);
+}
+
+.upshift-count:hover .upshift-count__show,
+.upshift-count[aria-pressed="true"] .upshift-count__show {
+	text-decoration: underline;
+}
+
+.upshift-count__show {
+	display: block;
+	margin-block-start: 4px;
+	color: var(--upshift-accent);
+	font-size: 12px;
+}
+
+.upshift-count:disabled {
+	cursor: default;
+}
+
+.upshift-count[aria-pressed="true"] {
+	background: #f0f0f1;
+	box-shadow: inset 0 0 0 1px var(--upshift-text);
+}
+
+.upshift-count--break {
+	border-inline-start-color: var(--upshift-red);
+}
+
+.upshift-count--host {
+	border-inline-start-color: var(--upshift-orange);
+}
+
+.upshift-count--later {
+	border-inline-start-color: var(--upshift-yellow);
+}
+
+.upshift-count--ready {
+	border-inline-start-color: var(--upshift-green);
+}
+
+.upshift-count__top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.upshift-count__number {
+	font-size: 32px;
+	font-weight: var(--upshift-bold);
+	line-height: 1.2;
+}
+
+.upshift-count--break .dashicons {
+	color: var(--upshift-red-text);
+}
+
+.upshift-count--host .dashicons {
+	color: var(--upshift-orange-text);
+}
+
+.upshift-count--later .dashicons {
+	color: var(--upshift-yellow-text);
+}
+
+.upshift-count--ready .dashicons {
+	color: var(--upshift-green-text);
+}
+
+.upshift-count__label {
+	display: block;
+	margin-block-start: var(--upshift-1);
+}
+
+/* Do this first. */
+.upshift-steps {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	counter-reset: upshift-step;
+}
+
+.upshift-step {
+	display: flex;
+	align-items: center;
+	gap: var(--upshift-2);
+	margin: 0;
+	padding: var(--upshift-2);
+	background: var(--upshift-surface);
+	border: 1px solid var(--upshift-line);
+	border-block-end-width: 0;
+	counter-increment: upshift-step;
+}
+
+.upshift-step:first-child {
+	border-start-start-radius: var(--upshift-radius);
+	border-start-end-radius: var(--upshift-radius);
+}
+
+.upshift-step:last-child {
+	border-block-end-width: 1px;
+	border-end-start-radius: var(--upshift-radius);
+	border-end-end-radius: var(--upshift-radius);
+}
+
+.upshift-step::before {
+	flex: none;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: #f0f0f1;
+	content: counter(upshift-step);
+	font-weight: var(--upshift-bold);
+	line-height: 32px;
+	text-align: center;
+}
+
+.upshift-step__text {
+	flex: 1;
+	min-width: 0;
+	max-width: 70ch;
+}
+
+.upshift-step__text strong,
+.upshift-step__text span {
+	display: block;
+}
+
+.upshift-step__text strong {
+	font-weight: var(--upshift-bold);
+}
+
+.upshift-step__text span {
+	color: var(--upshift-muted);
+}
+
+.upshift-step .button {
+	flex: none;
+}
+
+/* Plugin list. */
+.upshift-list {
+	display: grid;
+	gap: var(--upshift-1);
+}
+
+.upshift-item {
+	background: var(--upshift-surface);
+	border: 1px solid var(--upshift-line);
+	border-radius: var(--upshift-radius);
+}
+
+.upshift-item__row {
+	display: grid;
+	grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1.2fr) 24px;
+	align-items: center;
+	gap: var(--upshift-2);
+	padding: var(--upshift-2);
+	list-style: none;
+}
+
+.upshift-item__row::-webkit-details-marker {
+	display: none;
+}
+
+summary.upshift-item__row {
+	cursor: pointer;
+}
+
+.upshift-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	justify-self: start;
+	padding: 2px var(--upshift-1) 2px 4px;
+	border-radius: 999px;
+	font-weight: var(--upshift-bold);
+	white-space: nowrap;
+}
+
+[dir="rtl"] .upshift-badge {
+	padding: 2px 4px 2px var(--upshift-1);
+}
+
+.upshift-badge .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}
+
+.upshift-badge--break {
+	background: var(--upshift-red-soft);
+	color: var(--upshift-red-text);
+}
+
+.upshift-badge--host {
+	background: var(--upshift-orange-soft);
+	color: var(--upshift-orange-text);
+}
+
+.upshift-badge--later {
+	background: var(--upshift-yellow-soft);
+	color: var(--upshift-yellow-text);
+}
+
+.upshift-badge--ready {
+	background: var(--upshift-green-soft);
+	color: var(--upshift-green-text);
+}
+
+.upshift-item__name {
+	font-weight: var(--upshift-bold);
+}
+
+.upshift-chips {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+	margin-block-start: 4px;
+}
+
+.upshift-chips__label {
+	color: var(--upshift-muted);
+	font-size: 12px;
+}
+
+.upshift-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	padding: 0 var(--upshift-1) 0 4px;
+	background: #f0f0f1;
+	border-radius: 999px;
+	font-size: 12px;
+	line-height: 20px;
+}
+
+[dir="rtl"] .upshift-chip {
+	padding: 0 4px 0 var(--upshift-1);
+}
+
+.upshift-chip .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+.upshift-item__chevron {
+	color: var(--upshift-muted);
+	transition: transform 0.15s ease;
+}
+
+details[open] > summary .upshift-item__chevron {
+	transform: rotate(180deg);
+}
+
+.upshift-item__body {
+	padding: 0 var(--upshift-2) var(--upshift-2);
+	border-block-start: 1px solid var(--upshift-line);
+}
+
+.upshift-item__copy {
+	margin-block: var(--upshift-2) 0;
+}
+
+/* Problems table inside an expanded plugin. */
+.upshift-problems {
+	width: 100%;
+	margin-block-start: var(--upshift-2);
+	border-collapse: collapse;
+}
+
+.upshift-problems th,
+.upshift-problems td {
+	padding: var(--upshift-1);
+	text-align: start;
+	vertical-align: top;
+}
+
+.upshift-problems thead th {
+	color: var(--upshift-muted);
+	font-weight: var(--upshift-bold);
+	border-block-end: 1px solid var(--upshift-line);
+}
+
+.upshift-problems__file th {
+	background: #f6f7f7;
+}
+
+.upshift-tech,
+.upshift-other-notes {
+	margin-block-start: var(--upshift-2);
+}
+
+.upshift-tech summary {
+	color: var(--upshift-accent);
+	cursor: pointer;
+}
+
+.upshift-tech ul {
+	margin-block-start: var(--upshift-1);
+}
+
+.upshift-tech code {
+	font-size: 12px;
+	overflow-wrap: anywhere;
+}
+
+/* Progress. */
+.upshift-hero--run {
+	background: var(--upshift-neutral-soft);
+	border-color: var(--upshift-line);
+}
+
+.upshift-hero--run .upshift-hero__icon {
+	color: var(--upshift-muted);
+}
+
+.upshift-hero__action.upshift-controls {
+	display: flex;
+	flex-direction: column;
+	gap: var(--upshift-1);
+}
+
+.upshift-controls .button {
+	margin: 0;
+}
+
+.upshift-bar-row {
+	display: flex;
+	align-items: center;
+	gap: var(--upshift-2);
+	margin-block: var(--upshift-2) var(--upshift-1);
+}
+
+.upshift-percent {
+	min-width: 4ch;
+	font-weight: var(--upshift-bold);
+	text-align: end;
+}
+
+.upshift-bar {
+	display: block;
+	flex: 1;
+	min-width: 0;
+	width: 100%;
+	height: 8px;
+	border: 0;
+	border-radius: 4px;
+	background: #f0f0f1;
+	appearance: none;
+	overflow: hidden;
+}
+
+.upshift-bar::-webkit-progress-bar {
+	background: #f0f0f1;
+}
+
+.upshift-bar::-webkit-progress-value {
+	background: var(--upshift-brand);
+	transition: width 0.3s ease;
+}
+
+.upshift-bar::-moz-progress-bar {
+	background: var(--upshift-brand);
+}
+
+/* The running card (not the waiting card): raspberry icon, slowly turning. Reduced motion stops it below. */
+.upshift-hero--run.upshift-progress .upshift-hero__icon {
+	color: var(--upshift-brand);
+	animation: upshift-turn 3s linear infinite;
+}
+
+@keyframes upshift-turn {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* Compact line for a plugin with nothing to fix. */
+.upshift-item--compact .upshift-item__row {
+	grid-template-columns: 150px minmax(0, 1fr);
+	padding-block: var(--upshift-1);
+}
+
+.upshift-item--compact .upshift-item__main {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px var(--upshift-1);
+}
+
+.upshift-item--compact .upshift-chips {
+	margin-block-start: 0;
+}
+
+.upshift-ready-group > summary {
+	padding: var(--upshift-1) var(--upshift-2);
+	color: var(--upshift-accent);
+	cursor: pointer;
+}
+
+.upshift-ready-group[open] > summary {
+	margin-block-end: var(--upshift-1);
+}
+
+.upshift-filter {
+	margin: 0;
+}
+
+.upshift-filter.is-active {
+	min-height: 24px;
+	margin-block-end: var(--upshift-1);
+}
+
+.upshift-filter .button-link {
+	margin-inline-start: var(--upshift-1);
+}
+
+/* Empty state. */
+.upshift-empty {
+	padding-block: var(--upshift-4);
+	text-align: center;
+}
+
+.upshift-empty__art {
+	position: relative;
+	width: 96px;
+	height: 96px;
+	margin: 0 auto var(--upshift-2);
+	border-radius: 50%;
+	background: var(--upshift-brand-soft);
+}
+
+.upshift-empty__art .dashicons-admin-plugins {
+	width: 48px;
+	height: 48px;
+	margin-block-start: 24px;
+	color: var(--upshift-accent);
+	font-size: 48px;
+}
+
+.upshift-empty__art .dashicons-yes-alt {
+	position: absolute;
+	inset-block-end: 8px;
+	inset-inline-end: 8px;
+	width: 24px;
+	height: 24px;
+	background: var(--upshift-surface);
+	border-radius: 50%;
+	color: var(--upshift-green);
+	font-size: 24px;
+}
+
+.upshift-empty__text {
+	max-width: 56ch;
+	margin: 0 auto var(--upshift-3);
+	font-size: 16px;
+}
+
+.upshift-offer {
+	display: flex;
+	align-items: center;
+	gap: var(--upshift-3);
+	margin-block-start: var(--upshift-2);
+}
+
+.upshift-offer p {
+	flex: 1;
+	max-width: 70ch;
+	margin: 0;
+}
+
+/* Bottom of the report. */
+.upshift-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--upshift-1);
+	margin-block-start: var(--upshift-4);
+}
+
+.upshift-honest {
+	max-width: 70ch;
+	margin-block-start: var(--upshift-3);
+	color: var(--upshift-muted);
+}
+
+@media screen and (max-width: 960px) {
+	.upshift-item__row {
+		grid-template-columns: 150px minmax(0, 1fr) 24px;
+	}
+
+	.upshift-item--compact .upshift-item__row {
+		grid-template-columns: 150px minmax(0, 1fr);
+	}
+
+	.upshift-item__todo {
+		grid-column: 1 / -1;
+		grid-row: 2;
+	}
+}
+
+@media screen and (max-width: 782px) {
+	.upshift-strip__scope {
+		flex-basis: 100%;
+	}
+
+	.upshift-strip__scope label {
+		display: flex;
+		margin-block-end: var(--upshift-1);
+	}
+
+	.upshift-cards {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.upshift-hero {
+		flex-wrap: wrap;
+		gap: var(--upshift-2);
+	}
+
+	.upshift-hero__body {
+		flex-basis: calc(100% - 64px);
+	}
+
+	.upshift-hero__action {
+		width: 100%;
+	}
+
+	.upshift-hero__action .button {
+		width: 100%;
+	}
+
+	.upshift-compare {
+		max-width: none;
+	}
+
+	.upshift-step {
+		flex-wrap: wrap;
+	}
+
+	.upshift-step__text {
+		flex-basis: calc(100% - 48px);
+	}
+
+	.upshift-step .button {
+		margin-inline-start: 48px;
+	}
+
+	.upshift-offer {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.upshift-item__row {
+		grid-template-columns: minmax(0, 1fr) 24px;
+	}
+
+	.upshift-item--compact .upshift-item__row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.upshift-item__main {
+		grid-column: 1 / -1;
+		grid-row: 2;
+	}
+
+	.upshift-item--compact .upshift-item__main {
+		grid-column: 1;
+		grid-row: 2;
+	}
+
+	.upshift-hero__action.upshift-controls {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+
+	.upshift-hero__action.upshift-controls .button {
+		flex: 1;
+		width: auto;
+	}
+
+	.upshift-item__todo {
+		grid-column: 1 / -1;
+		grid-row: 3;
+	}
+
+	.upshift-item__chevron {
+		grid-column: 2;
+		grid-row: 1;
+	}
+
+	.upshift-problems thead {
+		display: none;
+	}
+
+	.upshift-problems,
+	.upshift-problems tbody,
+	.upshift-problems tr,
+	.upshift-problems td,
+	.upshift-problems__file th {
+		display: block;
+		width: auto;
+	}
+
+	.upshift-problems tr {
+		padding-block: var(--upshift-1);
+		border-block-end: 1px solid var(--upshift-line);
+	}
+
+	.upshift-problems tr.upshift-problems__file {
+		padding-block: 0;
+		border-block-end: 0;
+	}
+
+	.upshift-problems td {
+		padding: 4px 0;
+	}
+
+	.upshift-problems td::before {
+		display: block;
+		color: var(--upshift-muted);
+		content: attr(data-label);
+		font-weight: var(--upshift-bold);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.upshift-wrap * {
+		transition: none !important;
+		animation: none !important;
+	}
+}
+
+@media print {
+	#adminmenumain,
+	#wpadminbar,
+	#wpfooter,
+	.upshift-tabs,
+	.upshift-wrap .notice,
+	.upshift-strip,
+	.upshift-hero__action,
+	.upshift-cards button:disabled,
+	.upshift-tech,
+	.upshift-actions,
+	.upshift-step .button,
+	.upshift-item__chevron,
+	.upshift-offscreen {
+		display: none !important;
+	}
+
+	#wpcontent {
+		margin: 0 !important;
+		padding: 0 !important;
+	}
+
+	.upshift-tab {
+		max-width: none;
+	}
+
+	.upshift-hero,
+	.upshift-item,
+	.upshift-count,
+	.upshift-step {
+		background: #fff !important;
+		box-shadow: none !important;
+		break-inside: avoid;
+	}
+
+	.upshift-item {
+		break-inside: auto;
+	}
+}
+
+/* Settings and Upgrade watch. */
+.upshift-settings,
+.upshift-watch {
+	max-width: 760px;
+}
+
+.upshift-switch {
+	margin-block-start: var(--upshift-2);
+}
+
+.upshift-switch p {
+	max-width: 70ch;
+}
+
+.upshift-switch__row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--upshift-1) var(--upshift-2);
+}
+
+.upshift-compare {
+	max-width: 260px;
+}
+
+.wp-core-ui .upshift-compare .button {
+	height: auto;
+	padding-block: 4px;
+	line-height: 1.4;
+	white-space: normal;
+}
+
+.upshift-compare__note {
+	margin-block: var(--upshift-1) 0;
+	font-size: 12px;
+}
+
+.upshift-watch-table th[scope="row"] {
+	font-weight: var(--upshift-bold);
+}
+
+.upshift-setting {
+	padding-block: var(--upshift-2);
+	border-block-end: 1px solid var(--upshift-line);
+}
+
+.upshift-setting:last-child {
+	border-block-end: 0;
+}
+
+.upshift-setting p {
+	margin-block: 0 4px;
+	max-width: 70ch;
+}
+
+.upshift-setting__title {
+	font-size: 14px;
+}
+
+.upshift-advanced > summary {
+	padding-block: var(--upshift-2);
+	color: var(--upshift-accent);
+	cursor: pointer;
+}
+
+/* Help tab: help on one side, the author on the other. */
+.upshift-help-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+	gap: var(--upshift-3);
+	align-items: start;
+	max-width: 1000px;
+}
+
+.upshift-help p,
+.upshift-help ol {
+	max-width: 70ch;
+}
+
+.upshift-help h2:not(:first-child) {
+	margin-block-start: var(--upshift-3);
+}
+
+.upshift-help h3 {
+	margin: var(--upshift-2) 0 4px;
+	font-size: 14px;
+	font-weight: var(--upshift-bold);
+}
+
+.upshift-help h3 + p {
+	margin-block-start: 0;
+}
+
+.upshift-help__links {
+	margin-block-start: var(--upshift-3);
+}
+
+.upshift-author__head {
+	display: flex;
+	align-items: center;
+	gap: var(--upshift-2);
+	margin-block-end: var(--upshift-2);
+}
+
+.upshift-author__avatar {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: var(--upshift-brand);
+	color: #fff;
+	font-size: 18px;
+	font-weight: var(--upshift-bold);
+	letter-spacing: 0.5px;
+}
+
+.upshift-author p {
+	margin-block: 0 var(--upshift-2);
+}
+
+.upshift-author__head p {
+	margin: 0;
+}
+
+.upshift-author__name {
+	font-size: 16px;
+	font-weight: var(--upshift-bold);
+}
+
+.upshift-author__version {
+	margin-block: var(--upshift-3) 0;
+	padding-block-start: var(--upshift-2);
+	border-block-start: 1px solid var(--upshift-line);
+	font-size: 12px;
+}
+
+/* Upgrade guard waiting card: three steps. Raspberry marks only the current step. */
+.upshift-stages {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--upshift-2);
+	margin: var(--upshift-2) 0;
+	padding: 0;
+	list-style: none;
+}
+
+.upshift-stages__step {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--upshift-1);
+	margin: 0;
+	color: var(--upshift-muted);
+}
+
+.upshift-stages__marker {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 2px solid var(--upshift-line);
+	border-radius: 50%;
+	background: #fff;
+	color: var(--upshift-muted);
+	font-size: 13px;
+	font-weight: var(--upshift-bold);
+}
+
+.upshift-stages__step.is-current .upshift-stages__marker {
+	border-color: var(--upshift-brand);
+	background: var(--upshift-brand);
+	color: #fff;
+}
+
+.upshift-stages__text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	padding-block-start: 3px;
+}
+
+.upshift-stages__step.is-current .upshift-stages__text strong {
+	color: var(--upshift-text);
+}
+
+.upshift-privacy {
+	margin-block-start: var(--upshift-2);
+	font-size: 12px;
+}
+
+@media screen and (max-width: 782px) {
+	.upshift-help-grid,
+	.upshift-stages {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+#upshift-delete-form {
+	margin: 0;
+}

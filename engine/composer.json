@@ -1,0 +1,23 @@
+{
+	"name": "upshift/engine",
+	"description": "Engine dependencies for Upshift (input for PHP-Scoper; built into vendor-prefixed/ by bin/build-engine.php).",
+	"type": "project",
+	"license": "GPL-3.0-or-later",
+	"minimum-stability": "alpha",
+	"prefer-stable": true,
+	"require": {
+		"squizlabs/php_codesniffer": "4.0.4",
+		"phpcompatibility/php-compatibility": "10.0.0-alpha2",
+		"phpcompatibility/phpcompatibility-wp": "3.0.0-alpha2",
+		"phpcompatibility/phpcompatibility-paragonie": "2.0.0-alpha2",
+		"phpcsstandards/phpcsutils": "1.2.3"
+	},
+	"config": {
+		"platform": {
+			"php": "7.2.5"
+		},
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": false
+		}
+	}
+}

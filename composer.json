@@ -1,0 +1,24 @@
+{
+	"name": "upshift/upshift",
+	"description": "Dev tools for linting the Upshift plugin (not shipped).",
+	"type": "project",
+	"license": "GPL-3.0-or-later",
+	"minimum-stability": "alpha",
+	"prefer-stable": true,
+	"require-dev": {
+		"wp-coding-standards/wpcs": "^3.4.1",
+		"phpcompatibility/php-compatibility": "10.0.0-alpha2",
+		"phpcompatibility/phpcompatibility-wp": "3.0.0-alpha2",
+		"phpcompatibility/phpcompatibility-paragonie": "2.0.0-alpha2",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	},
+	"scripts": {
+		"lint": "phpcs",
+		"lint-fix": "phpcbf"
+	}
+}

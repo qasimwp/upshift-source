@@ -1,0 +1,8 @@
+/vendor/
+/vendor-prefixed/
+/engine/vendor/
+/build/
+/dist/
+/tools/
+*.zip
+*.log
